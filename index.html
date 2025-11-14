@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skelly Stickers • Neon Bone Lab</title>
+    <meta
+      name="description"
+      content="Spin the holographic skull, orbit brand badges, and learn the lore behind the Skelly Stickers 3D collection."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__title">
+        <span class="site-header__glyph" aria-hidden="true">💀</span>
+        <span>Skelly Stickers Lab</span>
+      </div>
+      <nav aria-label="Primary navigation" class="site-header__nav">
+        <a href="#experience">Experience</a>
+        <a href="#lineup">Sticker Lineup</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <button class="site-header__cta" type="button">Get notified</button>
+    </header>
+
+    <main>
+      <section id="experience" class="hero" aria-labelledby="hero-heading">
+        <div class="hero__visual" role="presentation">
+          <canvas
+            id="skull-scene"
+            aria-label="Interactive 3D skull experience"
+            data-reduced-motion="Tap to reanimate"
+          ></canvas>
+          <div class="hero__hud" aria-hidden="true">
+            <div class="hud__badge hud__badge--status">Status: Charged</div>
+            <div class="hud__badge hud__badge--hint">Drag to orbit • Scroll to zoom</div>
+            <button class="hud__badge hud__badge--toggle" type="button" id="toggle-orbit">Auto orbit: on</button>
+          </div>
+        </div>
+        <div class="hero__content">
+          <p class="hero__eyebrow">Glow-in-the-dark collection</p>
+          <h1 id="hero-heading">A cosmic skull for every sticker drop</h1>
+          <p class="hero__intro">
+            Witness the spinning relic that inspires each Skelly Sticker. Juggle the lighting,
+            scramble the vibe, and preview the glow badges in real time—no headset required.
+          </p>
+          <div class="hero__actions">
+            <button class="btn btn--primary" type="button" id="shuffle-colors">Shuffle glow palette</button>
+            <button class="btn btn--ghost" type="button" id="reset-scene">Reset scene</button>
+          </div>
+          <dl class="hero__metrics">
+            <div>
+              <dt>Orbit logos</dt>
+              <dd><span id="logo-count">0</span></dd>
+            </div>
+            <div>
+              <dt>Light presets</dt>
+              <dd>5</dd>
+            </div>
+            <div>
+              <dt>Average FPS</dt>
+              <dd><span id="fps-readout">--</span></dd>
+            </div>
+          </dl>
+          <div class="hero__logos" role="list" aria-label="Brand glyph preview"></div>
+        </div>
+      </section>
+
+      <section id="lineup" class="lineup" aria-labelledby="lineup-heading">
+        <div class="section-heading">
+          <p class="section-heading__eyebrow">Sticker lineup</p>
+          <h2 id="lineup-heading">Meet the orbiting crew</h2>
+          <p class="section-heading__intro">
+            Each holographic sticker spins around the skull inside the experience. Tap a badge to
+            lock it in the spotlight and reveal its lore.
+          </p>
+        </div>
+        <div class="lineup__grid" id="badge-grid" role="list"></div>
+      </section>
+
+      <section class="details" aria-labelledby="details-heading">
+        <div class="details__card">
+          <h2 id="details-heading">How to operate the bone lab</h2>
+          <ol class="details__steps">
+            <li>Drag the skull to steer the jawline and watch the neon edges shimmer.</li>
+            <li>Scroll or pinch to zoom until the stickers orbit just right.</li>
+            <li>Hit <strong>Shuffle glow palette</strong> for randomized accent lighting.</li>
+            <li>Tap a badge to pin it center stage and read the backstory.</li>
+            <li>Prefer chill mode? Toggle auto orbit to pause the rotation.</li>
+          </ol>
+        </div>
+        <aside class="details__aside" aria-labelledby="aside-heading">
+          <h3 id="aside-heading">Lab notes</h3>
+          <ul>
+            <li>Built with Three.js + custom shader tinting.</li>
+            <li>Fallback to static illustration when WebGL is unavailable.</li>
+            <li>Optimized for <abbr title="60 frames per second">60&nbsp;FPS</abbr> on modern mobile GPUs.</li>
+            <li>All assets glow under blacklight &amp; ship with protective sleeves.</li>
+          </ul>
+          <button type="button" class="btn btn--outline" id="download-spec">Download spec sheet</button>
+        </aside>
+      </section>
+
+      <section id="faq" class="faq" aria-labelledby="faq-heading">
+        <div class="section-heading">
+          <p class="section-heading__eyebrow">Quick answers</p>
+          <h2 id="faq-heading">FAQ</h2>
+        </div>
+        <div class="faq__items">
+          <details>
+            <summary>Can I use the 3D skull asset in my own scene?</summary>
+            <p>
+              Totally—grab the downloadable GLTF from the spec sheet and credit Skelly Stickers in
+              your project. The skull geometry is optimized for both AR filters and realtime apps.
+            </p>
+          </details>
+          <details>
+            <summary>Does the glow translate to real stickers?</summary>
+            <p>
+              Yes! Each sticker uses layered inks that soak up UV light. What you see in the viewer is
+              modeled after the real phosphorescent gradients.
+            </p>
+          </details>
+          <details>
+            <summary>Will this run on low-power devices?</summary>
+            <p>
+              We detect prefers-reduced-motion, throttle animation, and gracefully fall back to a static
+              render when WebGL is unavailable.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <p class="site-footer__brand">© <span id="footer-year"></span> Skelly Stickers</p>
+        <p class="site-footer__note">Built in the Neon Bone Lab.</p>
+      </div>
+      <div class="site-footer__links">
+        <a href="#experience">Experience</a>
+        <a href="#lineup">Lineup</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </footer>
+
+    <div class="toast" role="status" aria-live="polite" hidden>
+      <span class="toast__message"></span>
+      <button type="button" class="toast__dismiss" aria-label="Dismiss notification">✕</button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
