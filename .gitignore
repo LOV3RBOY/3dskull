@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+backend/data/
+backend/dist/
+backend/samples/
+.env

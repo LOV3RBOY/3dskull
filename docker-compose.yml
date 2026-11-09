@@ -1,0 +1,17 @@
+services:
+  studio:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATA_DIR: /data
+    ports:
+      - "8787:8787"
+    volumes:
+      - studio-data:/data
+    restart: unless-stopped
+    # Optional: expose over HTTPS with a Cloudflare Tunnel (see docs/DEPLOY.md)
+    # cloudflared:
+    #   image: cloudflare/cloudflared:latest
+    #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+volumes:
+  studio-data:
