@@ -1,5 +1,7 @@
 # XS Nightclub: Brand Research (Nov 2026)
 
+> **Update (10 Nov 2026):** the team supplied 10 real 2026 posts. Their forensic analysis **supersedes the inferred visual system below**. The current XS look is red-orange light trails, champagne names, "XS LAS VEGAS" and WYNNNIGHTLIFE.COM, not black-and-gold minimal. The live rules are in `backend/src/brand/xs-dna.ts` (built-in Brand DNA) and the `xs26_*` templates. The sections below remain as background research.
+
 This file holds the starting brand system that XS Studio's agents design within. It was put together by three research agents on 9 Nov 2026, covering the XS and Wynn web presence, @xslasvegas social, and current image-generation APIs.
 
 > **Read this first.** The research sandbox's network blocked direct fetches of xslasvegas.com, wynnlasvegas.com and instagram.com. Every finding below comes from search-indexed copies of official Wynn pages, Wynn press releases and trade/press coverage. **No flyer pixels, CSS hex values or font files were seen directly.** Labels used:

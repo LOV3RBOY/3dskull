@@ -211,6 +211,8 @@ const StyleSchema = z
     focus: z.string().regex(/^\d{1,3}% \d{1,3}%$/).optional(),
     shade: z.number().min(0).max(1).optional(),
     display_font: z.string().optional(),
+    seed: z.number().int().min(0).max(1_000_000).optional(),
+    zoom: z.number().min(0.5).max(2).optional(),
   })
   .optional();
 
@@ -225,6 +227,7 @@ const renderVisual = define({
     fields: z.record(z.string(), z.string()),
     artist_asset_id: z.string().optional(),
     background_asset_id: z.string().optional(),
+    artist_logo_asset_id: z.string().nullable().optional(),
     style: StyleSchema,
   }),
   jsonSchema: {
@@ -234,7 +237,8 @@ const renderVisual = define({
       format: { type: "string", enum: FORMAT_IDS },
       fields: { type: "object", additionalProperties: { type: "string" }, description: "Template text fields (see template catalogue)" },
       artist_asset_id: { type: "string", description: "artist_photo or artist_cutout asset id" },
-      background_asset_id: { type: "string", description: "venue_photo / crowd_photo / texture asset id" },
+      background_asset_id: { type: "string", description: "Full-bleed background: venue/crowd photo, texture, or approved artist key art that already has its own background" },
+      artist_logo_asset_id: { type: ["string", "null"], description: "artist_logo asset to use instead of typeset name (auto-picked by artist name if omitted; null forces typeset)" },
       style: {
         type: "object",
         properties: {
@@ -244,6 +248,8 @@ const renderVisual = define({
           focus: { type: "string", description: "object-position like '50% 25%'" },
           shade: { type: "number", minimum: 0, maximum: 1 },
           display_font: { type: "string" },
+          seed: { type: "integer", description: "Light-trail / procedural background seed (vary for a fresh pattern, keep for consistency)" },
+          zoom: { type: "number", description: "Scale of the artist hero (1 = default)" },
         },
       },
     },
@@ -258,7 +264,7 @@ const renderVisual = define({
       template: i.template,
       format: i.format as RenderSpec["format"],
       fields,
-      images: { artistAssetId: i.artist_asset_id, backgroundAssetId: i.background_asset_id },
+      images: { artistAssetId: i.artist_asset_id, backgroundAssetId: i.background_asset_id, artistLogoAssetId: i.artist_logo_asset_id },
       style: {
         mood: i.style?.mood,
         accent: i.style?.accent,
@@ -266,6 +272,8 @@ const renderVisual = define({
         focus: i.style?.focus,
         shade: i.style?.shade,
         displayFont: i.style?.display_font,
+        seed: i.style?.seed,
+        zoom: i.style?.zoom,
       },
     };
     const r = await renderSpec(spec);

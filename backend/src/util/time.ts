@@ -43,5 +43,12 @@ export function dateTreatments(isoDate: string) {
     slash: d.toFormat("M/d"),
     long: d.toFormat("cccc, LLLL d").toUpperCase(), // FRIDAY, NOVEMBER 14
     medium: d.toFormat("ccc LLL d").toUpperCase(), // FRI NOV 14
+    // XS 2026 house formats (from real posts)
+    xsHeadliner: `${d.toFormat("ccc").toUpperCase()}. ${d.toFormat("LLL").toUpperCase()} ${d.toFormat("d")}`, // SAT. NOV 14
+    xsCampaign: `${d.toFormat("cccc").toUpperCase()},  ${d.toFormat("LLLL").toUpperCase()} ${d.toFormat("d")}`, // SATURDAY,  NOVEMBER 7
+    xsFeature: d.toFormat("cccc, LLLL d, yyyy"), // Wednesday, November 18, 2026
+    xsPills: [`${d.toFormat("ccc").toUpperCase()}.`, `${d.toFormat("LLL").toUpperCase()} ${d.toFormat("d")}`, d.toFormat("yyyy")], // THU. | AUG 27 | 2026
+    year: d.toFormat("yyyy"),
+    yearShort: `‘${d.toFormat("yy")}`, // '26
   };
 }

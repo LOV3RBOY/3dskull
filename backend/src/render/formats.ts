@@ -13,8 +13,8 @@ export interface Format {
 }
 
 export const FORMATS: Record<FormatId, Format> = {
-  feed_4x5: { id: "feed_4x5", label: "Feed 4:5 · 1080×1350", width: 1080, height: 1350, scale: 1, safe: { top: 60, bottom: 60, side: 64 } },
-  story_9x16: { id: "story_9x16", label: "Story / Reel 9:16 · 1080×1920", width: 1080, height: 1920, scale: 1, safe: { top: 250, bottom: 340, side: 72 } },
+  feed_4x5: { id: "feed_4x5", label: "Feed 4:5 · 1080×1350", width: 1080, height: 1350, scale: 1, safe: { top: 30, bottom: 30, side: 30 } },
+  story_9x16: { id: "story_9x16", label: "Story / Reel 9:16 · 1080×1920", width: 1080, height: 1920, scale: 1, safe: { top: 140, bottom: 210, side: 30 } },
   square_1x1: { id: "square_1x1", label: "Square 1:1 · 1080×1080", width: 1080, height: 1080, scale: 1, safe: { top: 56, bottom: 56, side: 64 } },
   landscape_16x9: { id: "landscape_16x9", label: "Landscape 16:9 · 1920×1080 (screens / email / web)", width: 1920, height: 1080, scale: 1, safe: { top: 64, bottom: 64, side: 96 } },
   // 18x24in at 300dpi = 5400x7200. Lay out at 1350x1800 and rasterise at 4x.

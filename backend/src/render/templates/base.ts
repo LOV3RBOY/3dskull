@@ -12,6 +12,10 @@ export interface TemplateImages {
   artist?: string;
   artistIsCutout?: boolean;
   logo?: string;
+  /** Wynn Nightlife Las Vegas mark */
+  wynnLogo?: string;
+  /** Artist's own logotype (transparent PNG) — replaces the typeset name when present */
+  artistLogo?: string;
 }
 
 export interface TemplateStyle {
@@ -25,6 +29,10 @@ export interface TemplateStyle {
   displayFont?: string;
   /** Darkness of the type-protection gradient, 0..1 */
   shade?: number;
+  /** Seed for procedural backgrounds (light trails) so re-renders are identical */
+  seed?: number;
+  /** Scale of the artist figure/photo (1 = default) */
+  zoom?: number;
 }
 
 export interface TemplateInput {
@@ -49,6 +57,10 @@ export interface TemplateDef {
   kinds: ("flyer" | "story" | "lineup" | "announcement" | "recap")[];
   fields: EditableField[];
   images: { background: "required" | "optional" | "none"; artist: "required" | "optional" | "none"; prefersCutout?: boolean };
+  /** Uses the artist's own logotype in place of typeset name when one exists */
+  supportsArtistLogo?: boolean;
+  /** Places the Wynn Nightlife mark */
+  usesWynnLogo?: boolean;
   render(input: TemplateInput): string;
 }
 

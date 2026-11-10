@@ -20,6 +20,12 @@ const FAMILIES: { family: string; pkg: string; weights: number[]; italics?: bool
   // Big Caslon-class high-contrast display serif
   { family: "Libre Caslon Display", pkg: "libre-caslon-display", weights: [400] },
   { family: "Anton", pkg: "anton", weights: [400] },
+  // XS 2026 system
+  { family: "Syncopate", pkg: "syncopate", weights: [400, 700] },
+  { family: "Gloock", pkg: "gloock", weights: [400] },
+  { family: "Marcellus", pkg: "marcellus", weights: [400] },
+  { family: "Roboto Condensed", pkg: "roboto-condensed", weights: [400, 500, 600, 700, 800, 900], italics: true },
+  { family: "Archivo Black", pkg: "archivo-black", weights: [400] },
   { family: "Bebas Neue", pkg: "bebas-neue", weights: [400] },
   { family: "Oswald", pkg: "oswald", weights: [200, 300, 400, 500, 600, 700] },
   { family: "Barlow Condensed", pkg: "barlow-condensed", weights: [300, 400, 500, 600, 700, 800] },
@@ -66,6 +72,20 @@ export function fontFaceCss(): string {
           );
         }
       }
+    }
+  }
+  // Variable Archivo with a width axis (62%–125%): expanded heavy caps and condensed billing from one family.
+  const archivoDir = path.join(path.dirname(require.resolve("@fontsource-variable/archivo/package.json")), "files");
+  for (const style of ["normal", "italic"]) {
+    for (const [subset, range] of [
+      ["latin", LATIN],
+      ["latin-ext", LATIN_EXT],
+    ] as const) {
+      const file = path.join(archivoDir, `archivo-${subset}-wdth-${style}.woff2`);
+      if (fs.existsSync(file))
+        rules.push(
+          `@font-face{font-family:'Archivo';font-style:${style};font-weight:100 900;font-stretch:62% 125%;font-display:block;src:url('${pathToFileURL(file).href}') format('woff2-variations');unicode-range:${range};}`,
+        );
     }
   }
   // Custom brand fonts: e.g. "XSDisplay-Bold.otf" -> family "XSDisplay"; weight guessed from name.

@@ -43,7 +43,7 @@ describe("brand", () => {
     const p = getProfile();
     expect(p.tablesPhone).toBe("702-555-0100");
     expect(p.palette.gold).toBe("#B08D57");
-    expect(p.palette.black).toBe("#0B0A08");
+    expect(p.palette.black).toBe("#0D0403");
   });
 });
 

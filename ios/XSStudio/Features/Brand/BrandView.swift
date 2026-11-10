@@ -11,6 +11,8 @@ struct BrandView: View {
     @State private var referenceCount = 0
     @State private var isLoading = false
     @State private var isRebuilding = false
+    @State private var isSyncingInstagram = false
+    @State private var instagramMessage: String?
     @State private var errorMessage: String?
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var uploadProgress: (done: Int, total: Int)?
@@ -135,6 +137,24 @@ struct BrandView: View {
                 .disabled(isRebuilding || referenceCount == 0)
             }
 
+            Button {
+                Task { await syncInstagram() }
+            } label: {
+                HStack(spacing: 6) {
+                    if isSyncingInstagram { ProgressView().controlSize(.small).tint(Theme.gold) }
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Text(isSyncingInstagram ? "Syncing @xslasvegas…" : "Sync latest Instagram posts")
+                }
+            }
+            .buttonStyle(GhostButtonStyle())
+            .disabled(isSyncingInstagram || isRebuilding)
+
+            if let instagramMessage {
+                Text(instagramMessage)
+                    .font(.caption)
+                    .foregroundStyle(Theme.textMuted)
+            }
+
             if let dnaUpdatedAt {
                 Text("Updated \(dnaUpdatedAt.formatted(.relative(presentation: .named)))")
                     .font(.caption2)
@@ -243,6 +263,19 @@ struct BrandView: View {
         } catch is CancellationError {
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    private func syncInstagram() async {
+        isSyncingInstagram = true
+        defer { isSyncingInstagram = false }
+        do {
+            let result = try await app.api.syncInstagram()
+            instagramMessage = "@\(result.account ?? "xslasvegas"): \(result.imported) new, \(result.skipped) already synced" + (result.dnaRebuilt == true ? " · DNA rebuilt" : "")
+            await load()
+        } catch {
+            instagramMessage = error.localizedDescription
         }
     }
 

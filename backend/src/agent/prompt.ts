@@ -14,7 +14,7 @@ import { db } from "../db.js";
  */
 export function buildSystemPrompt(): string {
   const profile = getProfile();
-  const { dna } = getDna();
+  const { dna, source } = getDna();
   const templates = TEMPLATES.map(
     (t) =>
       `- ${t.id} — ${t.name}. ${t.description}\n  kinds: ${t.kinds.join(", ")} · artist image: ${t.images.artist}${t.images.prefersCutout ? " (transparent cut-out)" : ""} · background image: ${t.images.background}\n  fields: ${t.fields.map((f) => `${f.key}${f.multiline ? " (multiline)" : ""}${f.help ? ` — ${f.help}` : ""}`).join("; ")}`,
@@ -32,27 +32,26 @@ export function buildSystemPrompt(): string {
    - If the calendar has nothing relevant and the brief doesn't state the date explicitly, ask. A brief that states the date and artist explicitly is enough to proceed — mention that it isn't on the calendar yet.
 2. Gather real assets. Use find_assets for the artist's approved press photos/cut-outs, venue and crowd photography, and textures. Use view_assets to actually look at candidates before choosing; pick photos with strong presence, clean light, and room for type. Use view_brand_references when you want to re-ground yourself in what real XS posts look like.
    - Artist likeness comes only from team-uploaded photos. Never generate, synthesise, restyle or relight a real person. If there is no approved photo of the artist, say so and either use xs_typographic (no photo) or ask the team to upload one — offer both.
-   - Backgrounds: prefer real venue photography; otherwise generate_plate (an empty, people-free atmosphere plate in the post-2026 XS lane — brass, bronze, chrome, gold-mirrored surfaces, kinetic pendant light, warm haze). Never ask a plate for text, logos or people.
+   - Backgrounds: the 2026 headliner, feature and lineup systems draw their own red-orange light-trail field, and the campaign system its own blurred-silhouette field — no generated plate is needed for normal work. Use generate_plate only when a brief truly needs a scene the team has no photo of; it costs money per image, so say so in your reply. Never ask a plate for text, logos or people.
 3. Design. Choose the template that best fits the brief and the assets, write the fields with exact XS conventions, and render with render_visual. For a flyer request, default to delivering feed_4x5 + story_9x16 unless the brief says otherwise; add square/landscape/print only when asked.
 4. Review like a picky creative director. Every render_visual returns the image — study it. Check: artist name spelled and styled exactly (umlauts, lowercase, punctuation), day-of-week matches the date, hierarchy (artist name largest), nothing cramped or clipped, face not covered by type, safe zones respected, grade consistent, logo present, nothing off-brand. Read the diagnostics. If anything is off, adjust (template, focus point, shade, mood, copy length) and re-render. Two or three iterations is normal; don't deliver something you wouldn't post.
 5. Deliver. Call deliver with the final preview ids (only the keepers), and deliver_copy for captions or other text. When a flyer is delivered, also deliver a caption unless told not to.
 6. Reply briefly: what you made, any facts you verified, and anything the team must confirm (tentative dates, placeholder logo, missing photos). No long explanations.
 
-# Field conventions
-- Artist names: use exactly the canonical styling from the brand profile's artistStyling map or the calendar entry. Billing qualifiers exactly as booked: [DJ SET], B2B, WITH SPECIAL GUEST(S), (club set).
-- Date line: take it from lookup_calendar's dateFormats — never compute weekdays yourself. Social default is dowShort + dotted ("SAT 11.28"); print may use the long form ("SATURDAY, NOVEMBER 28").
-- Venue line: "XS NIGHTCLUB · WYNN LAS VEGAS" unless the venue differs (EBC at Night etc.).
-- CTA: "${profile.ticketCta} · ${profile.website}". Fine print: "${profile.finePrint}" (social may shorten to "21+").
-- Eyebrows are optional and sparing: "WYNN NIGHTLIFE PRESENTS", "WELCOME HOME", "TONIGHT", "GRAND REOPENING", "NEW YEAR'S EVE". Leave support empty unless there is a real support act or qualifier.
-- Doors time only when the calendar has it ("DOORS 10:30PM").
-- Captions: XS voice — confident, understated luxury. 1–3 short lines, artist @handle only if you are certain of it, date and CTA, then ${profile.hashtags.join(" ")}. Emoji: zero to two, never in a row. Provide 2–3 caption options in one deliver_copy when writing a caption, labelled Option A/B/C.
+# Field conventions (2026 XS system — from real posts)
+- Weekly artist nights → xs26_headliner, delivered as feed_4x5 + story_9x16. Fields: artist (canonical styling), venueLine "XS LAS VEGAS", dateLine = calendar dateFormats.xsHeadliner (e.g. "SAT. NOV 14"), ctaLabel "TICKETS:", ctaUrl "WYNNNIGHTLIFE.COM", year = dateFormats.year.
+- Multi-night campaigns (opening/closing weekend, NYE run, holiday weekend, F1 week) → xs26_campaign, one post per night with identical lockup. dateLine = dateFormats.xsCampaign (e.g. "SATURDAY,  NOVEMBER 7" — keep the two spaces). yearMark = dateFormats.yearShort. Giant words + campaign title come from the brief (e.g. OPENING / WEEKEND).
+- Debuts and one-off specials ("for the first time") → xs26_feature. infoLines = dateFormats.xsFeature, then "XS Las Vegas | 3131 Las Vegas Blvd S", then "Doors <time> | 21+ | wynnnightlife.com" (time only if the calendar has it).
+- Week/weekend schedules → xs26_lineup; rows "FRI. NOV 13 | KASKADE".
+- Artist art: prefer an artist_cutout as artist_asset_id. Approved key art that already has its own background (tagged key-art, or a press photo shot on red/black) goes in background_asset_id with no artist_asset_id — the tool composites type over it like the originals. Pick the asset whose orientation matches the format (tags 4:5 / 9:16) when available.
+- Artist logotypes (artist_logo assets) are used automatically in place of the typeset name; pass artist_logo_asset_id: null only if the brief asks for plain type.
+- Billing qualifiers exactly as booked: [DJ SET], B2B, WITH SPECIAL GUESTS. Never add an eyebrow or fine print the system doesn't use.
+- Captions: short and confident. Line 1 artist + day/date, line 2 "Tickets and table reservations at wynnnightlife.com" or "Link in bio", then ${profile.hashtags.join(" ")}. @handle only if certain. 0–2 emoji. Give 2–3 options in one deliver_copy (Option A/B/C).
 
-# Visual style controls (render_visual.style)
-- mood: warm (default for colour photos), noir (black & white, high contrast — classic for artist portraits), gold (monochrome gold duotone), natural.
-- accent: gold (champagne, default) · champagne (paler) · ivory · bronze.
-- focus: CSS object-position for the photo, e.g. "50% 20%" keeps a face high in frame; adjust when the face collides with type.
-- shade: 0–1 darkness of the type-protection gradient (default 0.85).
-- grain: 0–1 (default 0.35). Real-camera grain is part of the look; don't remove it.
+# Visual controls (render_visual.style)
+- seed: changes the procedural light-trail pattern (keep the same seed for feed + story of one event so they match).
+- zoom / focus: scale and position the artist art when the face collides with type or logos.
+- The light-trail field, grain, fades and colours are fixed by the system — don't fight them.
 
 # Templates
 ${templates}
@@ -63,8 +62,8 @@ ${formats}
 # Brand profile (team-maintained, authoritative)
 ${JSON.stringify(profile, null, 2)}
 
-# Brand DNA (synthesised from the team's real XS posts)
-${dna ?? "Not built yet — rely on the brand profile and, when useful, view_brand_references. Suggest the team upload 20–50 recent XS posts in Brand → References and tap Rebuild DNA."}`;
+# Brand DNA (${source === "team" ? "rebuilt from the team's references" : "built-in, from real 2026 posts"})
+${dna}`;
 }
 
 /** Volatile per-turn context, prepended to each user message. */

@@ -61,13 +61,13 @@ function script(body: any, res: http.ServerResponse) {
   }
   if (all.includes('"events"')) {
     const assetId = /"id":"(ast_[a-z0-9]+)"/.exec(all)?.[1];
-    const date = /"dowShort":"(\w+)".*?"dotted":"([\d.]+)"/.exec(all);
-    const fields = { eyebrow: "WYNN NIGHTLIFE PRESENTS", artist: "Diplo", dateLine: `${date?.[1]} ${date?.[2]}`, venueLine: "XS NIGHTCLUB · WYNN LAS VEGAS", cta: "TICKETS & TABLES · WYNNSOCIAL.COM", finePrint: "21+" };
+    const date = /"xsHeadliner":"([^"]+)"/.exec(all);
+    const fields = { artist: "Diplo", venueLine: "XS LAS VEGAS", dateLine: date?.[1] ?? "?", ctaLabel: "TICKETS:", ctaUrl: "WYNNNIGHTLIFE.COM", year: "2026" };
     return sse(
       res,
       [
-        { type: "tool_use", id: "tu_r1", name: "render_visual", input: { template: "xs_headliner", format: "feed_4x5", fields, artist_asset_id: assetId, style: { mood: "noir" } } },
-        { type: "tool_use", id: "tu_r2", name: "render_visual", input: { template: "xs_headliner", format: "story_9x16", fields, artist_asset_id: assetId, style: { mood: "noir" } } },
+        { type: "tool_use", id: "tu_r1", name: "render_visual", input: { template: "xs26_headliner", format: "feed_4x5", fields, artist_asset_id: assetId, style: { seed: 3 } } },
+        { type: "tool_use", id: "tu_r2", name: "render_visual", input: { template: "xs26_headliner", format: "story_9x16", fields, artist_asset_id: assetId, style: { seed: 3 } } },
       ],
       "tool_use",
     );
@@ -174,7 +174,7 @@ describe("agent run", () => {
     expect(second.at(-1).content.filter((b: any) => b.type === "tool_result").length).toBe(2);
     // Day-of-week comes from the calendar, not the model
     const renderCall = requests[1] && requests[2].body.messages.at(-2).content.find((b: any) => b.type === "tool_use" && b.name === "render_visual");
-    expect(renderCall.input.fields.dateLine).toBe("SAT 11.28");
+    expect(renderCall.input.fields.dateLine).toBe("SAT. NOV 28");
 
     const detail = await (await fetch(`${base}/threads/${thread.id}`, { headers: auth })).json();
     expect(detail.messages.map((m: any) => m.role)).toEqual(["user", "assistant"]);
@@ -188,10 +188,10 @@ describe("agent run", () => {
     expect([meta.width, meta.height]).toEqual([1080, 1350]);
 
     // Deterministic editor re-render: new format + edited field, no AI involved
-    const rr = await fetch(`${base}/outputs/${flyer.id}/rerender`, { method: "POST", headers: auth, body: JSON.stringify({ format: "square_1x1", fields: { eyebrow: "TONIGHT" } }) });
+    const rr = await fetch(`${base}/outputs/${flyer.id}/rerender`, { method: "POST", headers: auth, body: JSON.stringify({ format: "story_9x16", fields: { dateLine: "SUN. NOV 29" } }) });
     const re = await rr.json();
-    expect(re.format).toMatchObject({ width: 1080, height: 1080 });
-    expect(re.fields.eyebrow).toBe("TONIGHT");
+    expect(re.format).toMatchObject({ width: 1080, height: 1920 });
+    expect(re.fields.dateLine).toBe("SUN. NOV 29");
     expect(re.parentId).toBe(flyer.id);
 
     // Follow-up in the same thread keeps the transcript (append-only)

@@ -11,6 +11,7 @@ import { createUser, deleteUser, findUserByEmail, listUsers, requireAuth, requir
 import { analyzeReference, getDna, rebuildDna } from "./brand/dna.js";
 import { getProfile, updateProfile, type BrandProfile } from "./brand/profile.js";
 import { anthropicConfigured } from "./claude.js";
+import { instagramConfigured, lastSync, syncInstagram } from "./integrations/instagram.js";
 import { config } from "./config.js";
 import { createEvent, deleteEvent, listEvents, updateEvent } from "./events.js";
 import { activeCutoutProvider } from "./imaging/cutout.js";
@@ -94,6 +95,7 @@ export async function buildApp(opts: { logger?: boolean } = {}): Promise<Fastify
       model: config.anthropic.model,
       imageProvider: activeImageProvider(),
       cutoutProvider: activeCutoutProvider(),
+      instagram: instagramConfigured(),
       renderer: await rendererAvailable(),
     }));
 
@@ -253,8 +255,8 @@ export async function buildApp(opts: { logger?: boolean } = {}): Promise<Fastify
 
     // brand
     r.get("/brand", async () => {
-      const { dna, updatedAt } = getDna();
-      return { profile: getProfile(), dna, dnaUpdatedAt: updatedAt, referenceCount: listAssets({ kind: "brand_reference", limit: 10000 }).length };
+      const { dna, updatedAt, source } = getDna();
+      return { profile: getProfile(), dna, dnaUpdatedAt: updatedAt, dnaSource: source, referenceCount: listAssets({ kind: "brand_reference", limit: 10000 }).length };
     });
     r.put("/brand/profile", { preHandler: editor }, async (req) => {
       const b = req.body as Partial<BrandProfile>;
@@ -267,6 +269,14 @@ export async function buildApp(opts: { logger?: boolean } = {}): Promise<Fastify
       const row = await createAsset({ data: await file.toBuffer(), kind: "brand_reference", title: "XS reference post", userId: req.user!.id });
       if (anthropicConfigured()) analyzeReference(row.id).catch((e) => app.log.warn(e, "reference analysis failed"));
       return assetToApi(row);
+    });
+    r.get("/brand/instagram", async () => ({ connected: instagramConfigured(), lastSync: lastSync() }));
+    r.post("/brand/instagram/sync", { preHandler: editor }, async (req) => {
+      if (!instagramConfigured()) throw new HttpError(503, "not_configured", "Instagram isn't connected on the server (INSTAGRAM_ACCESS_TOKEN).");
+      const b = parse(z.object({ maxPosts: z.number().int().min(1).max(500).optional(), rebuildDna: z.boolean().optional() }), req.body ?? {});
+      const result = await syncInstagram({ maxPosts: b.maxPosts, userId: req.user!.id });
+      const dna = b.rebuildDna && result.imported > 0 && anthropicConfigured() ? await rebuildDna() : undefined;
+      return { ...result, dnaRebuilt: !!dna };
     });
     r.post("/brand/dna/rebuild", { preHandler: editor }, async () => {
       if (!anthropicConfigured()) throw new HttpError(503, "not_configured", "The server has no ANTHROPIC_API_KEY configured.");

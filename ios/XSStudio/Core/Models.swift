@@ -69,6 +69,7 @@ enum OutputStatus: String, Codable, Hashable, CaseIterable, Identifiable {
 enum AssetKind: String, Codable, Hashable, CaseIterable, Identifiable {
     case artistPhoto = "artist_photo"
     case artistCutout = "artist_cutout"
+    case artistLogo = "artist_logo"
     case logo
     case venuePhoto = "venue_photo"
     case crowdPhoto = "crowd_photo"
@@ -82,12 +83,13 @@ enum AssetKind: String, Codable, Hashable, CaseIterable, Identifiable {
     }
 
     var id: String { rawValue }
-    static var uploadable: [AssetKind] { [.artistPhoto, .artistCutout, .logo, .venuePhoto, .crowdPhoto, .texture, .brandReference] }
+    static var uploadable: [AssetKind] { [.artistPhoto, .artistCutout, .artistLogo, .logo, .venuePhoto, .crowdPhoto, .texture, .brandReference] }
 
     var label: String {
         switch self {
         case .artistPhoto: return "Artist photo"
         case .artistCutout: return "Artist cut-out"
+        case .artistLogo: return "Artist logotype"
         case .logo: return "Logo"
         case .venuePhoto: return "Venue"
         case .crowdPhoto: return "Crowd"
@@ -148,6 +150,7 @@ struct SystemStatus: Codable, Hashable {
     let cutoutProvider: String?
     let renderer: Bool
     let model: String?
+    let instagram: Bool?
 }
 
 // MARK: - Studio
@@ -494,6 +497,20 @@ struct BrandResponse: Codable {
 
 struct DNAResponse: Codable {
     let dna: String
+}
+
+/// POST /brand/instagram/sync
+struct InstagramSyncRequest: Encodable {
+    let rebuildDna: Bool
+}
+
+struct InstagramSyncResult: Codable {
+    let account: String?
+    let scanned: Int
+    let imported: Int
+    let skipped: Int
+    let errors: [String]
+    let dnaRebuilt: Bool?
 }
 
 struct TemplateInfo: Codable, Identifiable, Hashable {

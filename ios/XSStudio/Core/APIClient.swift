@@ -325,4 +325,9 @@ extension APIClient {
     }
 
     func templates() async throws -> [TemplateInfo] { try await send("GET", "/templates") }
+
+    /// Pulls the latest @xslasvegas posts via the official Instagram API (server-side token) and rebuilds the DNA.
+    func syncInstagram() async throws -> InstagramSyncResult {
+        try await send("POST", "/brand/instagram/sync", body: InstagramSyncRequest(rebuildDna: true))
+    }
 }

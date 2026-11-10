@@ -3,6 +3,7 @@ import { bootstrapAdmin, userCount } from "./auth.js";
 import { config } from "./config.js";
 import { closeRenderer } from "./render/renderer.js";
 import { recoverInterruptedRuns } from "./runs.js";
+import { startInstagramScheduler } from "./integrations/instagram.js";
 
 recoverInterruptedRuns();
 bootstrapAdmin();
@@ -11,6 +12,7 @@ if (userCount() === 0) {
 }
 
 const app = await buildApp();
+startInstagramScheduler();
 await app.listen({ port: config.port, host: config.host });
 
 for (const sig of ["SIGINT", "SIGTERM"] as const) {

@@ -12,36 +12,18 @@ import { TEMPLATES } from "../render/templates/xs.js";
 const [outDir = "./samples", artist, cutout, background, logo] = process.argv.slice(2);
 fs.mkdirSync(outDir, { recursive: true });
 
+const headliner = { artist: "MARSHMELLO", venueLine: "XS LAS VEGAS", dateLine: "FRI. DEC 11", ctaLabel: "TICKETS:", ctaUrl: "WYNNNIGHTLIFE.COM", year: "2026" };
 const fields: Record<string, Record<string, string>> = {
-  default: {
-    eyebrow: "WYNN NIGHTLIFE PRESENTS",
-    artist: "DIPLO",
-    support: "",
-    dateLine: "SAT 11.28",
-    venueLine: "XS NIGHTCLUB · WYNN LAS VEGAS",
-    cta: "TICKETS & TABLES · WYNNSOCIAL.COM",
-    finePrint: "21+ · VALID GOVERNMENT-ISSUED ID REQUIRED · DRESS CODE STRICTLY ENFORCED",
-  },
-  xs_lineup: {
-    title: "THIS WEEKEND",
-    rows: "FRI 11.13 | KASKADE\nSAT 11.14 | MARSHMELLO",
-    venueLine: "XS NIGHTCLUB · WYNN LAS VEGAS",
-    cta: "TICKETS & TABLES · WYNNSOCIAL.COM",
-    finePrint: "21+ · DRESS CODE STRICTLY ENFORCED",
-  },
-  xs_residency: {
-    eyebrow: "WELCOME HOME",
-    artist: "RÜFÜS DU SOL",
-    dates: "SUN 11.22\nSAT 12.19\nFRI 01.15\nSAT 02.13\nFRI 03.12\nSAT 04.10",
-    venueLine: "XS NIGHTCLUB · WYNN LAS VEGAS",
-    cta: "TICKETS & TABLES · WYNNSOCIAL.COM",
-    finePrint: "21+",
-  },
+  default: headliner,
+  xs26_headliner: headliner,
+  xs26_campaign: { bigTop: "OPENING", bigBottom: "WEEKEND", pill: "XS LAS VEGAS", yearMark: "\u201826", campaignTitle: "OPENING", campaignSub: "WEEKEND LINEUP", artist: "DIPLO B2B HUGEL", dateLine: "SUNDAY,  NOVEMBER 8", ctaLine1: "TICKETS AND TABLE RESERVATIONS AT", ctaLine2: "WYNNNIGHTLIFE.COM" },
+  xs26_feature: { kicker: "FOR THE\nFIRST TIME", artist: "FRANKY\nRIZARDO", infoLines: "Wednesday, November 18, 2026\nXS Las Vegas | 3131 Las Vegas Blvd S\nDoors 10PM | 21+ | wynnnightlife.com" },
+  xs26_lineup: { title: "THIS WEEKEND", rows: "FRI. NOV 13 | KASKADE\nSAT. NOV 14 | MARSHMELLO", ctaLabel: "TICKETS:", ctaUrl: "WYNNNIGHTLIFE.COM", year: "2026" },
   xs_recap: { eyebrow: "LAST NIGHT · SAT 11.07", artist: "CALVIN HARRIS" },
 };
 
 const only = process.env.ONLY?.split(",");
-const formats = (process.env.FORMATS?.split(",") as FormatId[] | undefined) ?? ["feed_4x5", "story_9x16", "landscape_16x9"];
+const formats = (process.env.FORMATS?.split(",") as FormatId[] | undefined) ?? ["feed_4x5", "story_9x16"];
 
 for (const tpl of TEMPLATES) {
   if (only && !only.includes(tpl.id)) continue;

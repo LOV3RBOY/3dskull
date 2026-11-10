@@ -16,9 +16,10 @@ iPhone app (SwiftUI)  ──HTTPS/SSE──▶  Backend (Node + Fastify)
 - **Real people stay real.** Artist likeness only comes from the team's approved press photos. Nothing generative ever touches a person: no restyle, relight or upscale. AI is only used for empty atmosphere plates such as rooms, light and haze, and only when you want it.
 - **Typography is typeset, not generated.** Every letter is set by a deterministic layout engine with real fonts, auto-fit, safe zones and exact canonical artist styling (RÜFÜS DU SOL, deadmau5, BUNT.). AI-drawn text is the most common giveaway, and this design rules it out.
 - **Facts come from the calendar.** The agent has to look up the booking. It gets weekday and date formats from the calendar and never works them out itself. If the brief conflicts with the calendar, for example Diplo isn't on this weekend, it says so and offers the correct dates.
+- **The real 2026 XS design system.** Templates were rebuilt by measuring real @xslasvegas posts: the Headliner (light trails, champagne name, "XS LAS VEGAS / SAT. NOV 14", boxed TICKETS footer), the Campaign series (Opening Weekend), the Feature/debut, and the Lineup. They also use artist logotypes, the XS and Wynn Nightlife marks, and WYNNNIGHTLIFE.COM.
 - **Brand DNA from your own posts.** Upload your real posts. Claude analyses each one, then writes a measurable house style that the agent follows. The agent can also view those reference posts while it designs.
 - **It checks its own work.** Each render comes back to the agent as an image. It checks the result against a creative-director checklist and re-renders before delivering.
-- **Finish.** Real-camera grain, a warm or noir grade, and metallic champagne gold. Output is at exact platform sizes: 1080×1350, 1080×1920, 1080×1080, 1920×1080, and 18×24 in at 300 dpi.
+- **Finish.** Heavy real-camera grain, red-orange light and champagne type, matching the 2026 posts. Output is at exact platform sizes: 1080×1350, 1080×1920, 1080×1080, 1920×1080, and 18×24 in at 300 dpi.
 - **The editor stays deterministic.** In the Library you can edit any text field, or switch format or template, and re-render instantly with no AI involved.
 
 ## Repository
@@ -27,6 +28,7 @@ iPhone app (SwiftUI)  ──HTTPS/SSE──▶  Backend (Node + Fastify)
 | `backend/` | API, agent, layout engine, storage (TypeScript). See `docs/API.md` |
 | `ios/` | Native SwiftUI app (XcodeGen). See `ios/README.md` for Xcode → TestFlight |
 | `docs/BRAND_RESEARCH.md` | Research findings and their confidence levels |
+| `docs/INSTAGRAM.md` | Connecting @xslasvegas so the tool syncs the latest posts automatically |
 | `docs/DEPLOY.md` | Hosting (Fly.io / Docker / local) and first-run checklist |
 | `docs/API.md` | Backend API contract |
 

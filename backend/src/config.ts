@@ -34,8 +34,8 @@ export const config = {
   },
 
   images: {
-    /** auto | openai | gemini | bfl | none — "auto" picks the first configured key in that order: gemini, bfl, openai */
-    provider: env("IMAGE_PROVIDER", "auto")!,
+    /** none (default — no paid generation) | auto | openai | gemini | bfl. "auto" picks the first configured key: gemini, bfl, openai */
+    provider: env("IMAGE_PROVIDER", "none")!,
     openaiApiKey: env("OPENAI_API_KEY"),
     openaiModel: env("OPENAI_IMAGE_MODEL", "gpt-image-2.6-sunburst")!,
     geminiApiKey: env("GEMINI_API_KEY"),

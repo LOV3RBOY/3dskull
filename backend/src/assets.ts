@@ -4,7 +4,7 @@ import { deleteFile, filePath, makeThumb, putFile, signedUrl } from "./storage.j
 import { badRequest, notFound } from "./util/errors.js";
 import { newId, nowIso } from "./util/ids.js";
 
-export const ASSET_KINDS = ["artist_photo", "artist_cutout", "logo", "venue_photo", "crowd_photo", "texture", "brand_reference"] as const;
+export const ASSET_KINDS = ["artist_photo", "artist_cutout", "artist_logo", "logo", "venue_photo", "crowd_photo", "texture", "brand_reference"] as const;
 export type AssetKind = (typeof ASSET_KINDS)[number];
 
 export interface AssetRow {
@@ -156,8 +156,20 @@ export async function deleteAsset(id: string) {
   await deleteFile(r.thumb_key);
 }
 
-/** Primary logo: an asset of kind logo tagged "primary", else the newest logo. */
+const hasTag = (a: AssetRow, tag: string) => json.parse<string[]>(a.tags, []).some((t) => t.toLowerCase() === tag);
+
+/** XS logo: kind logo tagged "xs" (or "primary"); falls back to the newest logo not tagged "wynn". */
 export function primaryLogo(): AssetRow | undefined {
   const logos = listAssets({ kind: "logo", limit: 50 });
-  return logos.find((l) => json.parse<string[]>(l.tags, []).some((t) => t.toLowerCase() === "primary")) ?? logos[0];
+  return logos.find((l) => hasTag(l, "xs") || hasTag(l, "primary")) ?? logos.find((l) => !hasTag(l, "wynn"));
+}
+
+/** Wynn Nightlife Las Vegas logo: kind logo tagged "wynn". */
+export function wynnLogo(): AssetRow | undefined {
+  return listAssets({ kind: "logo", limit: 50 }).find((l) => hasTag(l, "wynn"));
+}
+
+/** The artist's own logotype (e.g. Kaskade, RÜFÜS DU SOL), if the team uploaded one. */
+export function artistLogo(artist: string): AssetRow | undefined {
+  return listAssets({ kind: "artist_logo", artist, limit: 5 })[0];
 }

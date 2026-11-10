@@ -66,7 +66,7 @@ Errors: non‑2xx with `{ "error": { "code": string, "message": string } }`.
 - `DELETE /assets/:id`
 
 `Asset = { id, kind: AssetKind, title, artist?: string, tags: string[], url, thumbUrl, width, height, hasAlpha: bool, analysis?: string, createdAt }`
-`AssetKind = "artist_photo"|"artist_cutout"|"logo"|"venue_photo"|"crowd_photo"|"texture"|"brand_reference"`
+`AssetKind = "artist_photo"|"artist_cutout"|"artist_logo"|"logo"|"venue_photo"|"crowd_photo"|"texture"|"brand_reference"`
 
 ## Events (XS calendar — source of truth for dates)
 - `GET /events?from=YYYY-MM-DD&to=YYYY-MM-DD` → `Event[]`
@@ -79,10 +79,12 @@ Errors: non‑2xx with `{ "error": { "code": string, "message": string } }`.
 `Event = EventInput & { id, createdAt, updatedAt }`
 
 ## Brand system
-- `GET /brand` → `{ profile: BrandProfile, dna: string|null, dnaUpdatedAt?: string, referenceCount: number }`
+- `GET /brand` → `{ profile: BrandProfile, dna: string, dnaSource: "team"|"builtin", dnaUpdatedAt?: string, referenceCount: number }`
 - `PUT /brand/profile` `Partial<BrandProfile>` → `BrandProfile` (team overrides: phone, URLs, legal line, hashtags…)
 - `POST /brand/references` **multipart** `file` → `Asset` (kind `brand_reference`, analysed by Claude vision in the background)
 - `POST /brand/dna/rebuild` → `{ dna }` — re-synthesises the Brand DNA from all analysed references.
+- `GET /brand/instagram` → `{ connected, lastSync }`
+- `POST /brand/instagram/sync` `{ maxPosts?, rebuildDna? }` → `{ account, scanned, imported, skipped, errors, dnaRebuilt }` — pulls @xslasvegas posts via the official Instagram API (see docs/INSTAGRAM.md).
 
 ## Templates
 - `GET /templates` → `{ id, name, description, kinds: OutputKind[], fields: EditableField[], previewUrl? }[]`

@@ -46,11 +46,12 @@ The iOS simulator can reach `http://localhost:8787`, because ATS allows local ne
    - **viewer:** read-only
    - **editor:** create and edit
    - **admin:** also manages users
-2. **Assets → Upload:**
-   - The official XS logo (kind *logo*, tag `primary`; transparent PNG).
-   - Artist press photos (kind *artist_photo*, artist name set). Use *Lift subject* to make cut-outs.
-   - Venue and crowd photography from the reimagined room.
-3. **Brand → References:** upload 20–50 recent @xslasvegas posts, then tap **Rebuild DNA**.
+2. **Assets → Upload** (transparent PNG or SVG-exported PNG at 2× size):
+   - XS mark, white: kind *logo*, tag `xs`.
+   - Wynn Nightlife Las Vegas mark, white: kind *logo*, tag `wynn`.
+   - Artist logotypes where artists have them (Kaskade, RÜFÜS DU SOL…): kind *artist_logo*, artist name set.
+   - Artist key art / press photos: kind *artist_photo* (tag `key-art` plus `4:5` or `9:16` if the art already has its background). Use *Lift subject* for cut-outs.
+3. **Connect Instagram** (docs/INSTAGRAM.md), then tap **Brand → Sync latest Instagram posts**. Or upload recent posts manually in Brand → References and tap **Rebuild DNA**.
 4. **Brand → Profile:** replace the inferred palette and fonts with official values. Set the tables phone if you want it printed.
 5. **Calendar:** confirm or replace the seeded *tentative* dates, or paste a lineup email into **Paste lineup**.
 

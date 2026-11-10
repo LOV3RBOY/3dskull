@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { findAsset, assetPath, primaryLogo } from "./assets.js";
+import { findAsset, assetPath, primaryLogo, wynnLogo, artistLogo } from "./assets.js";
 import { getProfile } from "./brand/profile.js";
 import { db, json } from "./db.js";
 import { FORMATS, type FormatId, publicFormat } from "./render/formats.js";
@@ -18,7 +18,7 @@ export interface RenderSpec {
   template: string;
   format: FormatId;
   fields: Record<string, string>;
-  images: { artistAssetId?: string; backgroundAssetId?: string; logoAssetId?: string | null };
+  images: { artistAssetId?: string; backgroundAssetId?: string; logoAssetId?: string | null; artistLogoAssetId?: string | null };
   style: TemplateStyle;
 }
 
@@ -130,6 +130,16 @@ export async function renderSpec(spec: RenderSpec) {
   if (tpl.images.artist === "required" && !artist && !background) throw badRequest(`Template ${tpl.id} needs an artist photo`);
   if (tpl.images.background === "required" && !background) throw badRequest(`Template ${tpl.id} needs a background photo`);
   const logo = spec.images.logoAssetId === null ? undefined : spec.images.logoAssetId ? findAsset(spec.images.logoAssetId) : primaryLogo();
+  const wynn = wynnLogo();
+  // Artist logotype: explicit id, or auto-pick by artist name unless explicitly disabled (null).
+  const artLogo =
+    spec.images.artistLogoAssetId === null
+      ? undefined
+      : spec.images.artistLogoAssetId
+        ? findAsset(spec.images.artistLogoAssetId)
+        : spec.fields.artist && tpl.supportsArtistLogo
+          ? artistLogo(spec.fields.artist.replace(/\s*[\[(].*$/, ""))
+          : undefined;
   const profile = getProfile();
   const html = tpl.render({
     format,
@@ -139,14 +149,17 @@ export async function renderSpec(spec: RenderSpec) {
       artistIsCutout: !!artist?.has_alpha,
       background: background ? assetPath(background) : undefined,
       logo: logo ? assetPath(logo) : undefined,
+      wynnLogo: wynn ? assetPath(wynn) : undefined,
+      artistLogo: artLogo ? assetPath(artLogo) : undefined,
     },
     style: spec.style ?? {},
     profile,
   });
   const { png, diagnostics } = await renderHtml(html, format);
-  if (!logo) diagnostics.push("No official XS logo uploaded — a typeset placeholder was used. Upload the logo artwork in Assets (kind: logo).");
+  if (!logo) diagnostics.push("No official XS logo uploaded — a typeset placeholder was used. Upload it in Assets (kind: logo, tag: xs).");
+  if (!wynn && tpl.usesWynnLogo) diagnostics.push("No Wynn Nightlife logo uploaded — a typeset placeholder was used. Upload it in Assets (kind: logo, tag: wynn).");
   if (tpl.images.prefersCutout && artist && !artist.has_alpha) diagnostics.push("This layout expects a transparent cut-out; the artist photo has no alpha channel.");
-  return { png, diagnostics, usedLogo: !!logo };
+  return { png, diagnostics, usedLogo: !!logo, usedArtistLogo: !!artLogo };
 }
 
 export async function createVisualOutput(args: {
