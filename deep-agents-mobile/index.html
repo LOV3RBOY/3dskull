@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Deep Agents</title>
+<meta name="description" content="A LangChain Deep Agent on your phone: it plans, writes files and delegates to sub-agents.">
+<meta name="theme-color" content="#111318">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deep Agents">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/purify.min.js"></script>
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f3; --line: #dfe2e7;
+  --text: #15171c; --muted: #646b78; --accent: #1f8f5c; --accent-ink: #ffffff;
+  --accent-soft: #e2f4ea; --danger: #c43d3d; --danger-soft: #fbe9e9;
+  --user: #1f8f5c; --user-ink: #ffffff; --shadow: 0 8px 30px rgba(0,0,0,.12);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --surface: #1a1d24; --surface-2: #232731; --line: #2e3340;
+    --text: #e9ebef; --muted: #9aa1ae; --accent: #58d68d; --accent-ink: #0d1a12;
+    --accent-soft: #1d3428; --danger: #ff7b7b; --danger-soft: #3a1f22;
+    --user: #2a6b4b; --user-ink: #f2fbf6; --shadow: 0 8px 30px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --surface: #1a1d24; --surface-2: #232731; --line: #2e3340;
+  --text: #e9ebef; --muted: #9aa1ae; --accent: #58d68d; --accent-ink: #0d1a12;
+  --accent-soft: #1d3428; --danger: #ff7b7b; --danger-soft: #3a1f22;
+  --user: #2a6b4b; --user-ink: #f2fbf6; --shadow: 0 8px 30px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+input, textarea, select { font: inherit; font-size: 16px; color: var(--text); }
+svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.app { display: flex; flex-direction: column; height: 100dvh; }
+header.top {
+  display: flex; align-items: center; gap: 4px;
+  padding: calc(env(safe-area-inset-top) + 6px) 8px 6px;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+header.top h1 { flex: 1; margin: 0; font-size: 17px; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; position: relative; color: var(--text); }
+.icon-btn:active { background: var(--surface-2); }
+.badge { position: absolute; top: 5px; right: 3px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.badge[hidden] { display: none; }
+
+main#scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 8px; }
+.feed { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+.msg { max-width: 100%; overflow-wrap: anywhere; }
+.msg.user { align-self: flex-end; max-width: 85%; background: var(--user); color: var(--user-ink); padding: 10px 14px; border-radius: 18px 18px 6px 18px; white-space: pre-wrap; }
+.msg.ai { align-self: stretch; }
+.md > :first-child { margin-top: 0; } .md > :last-child { margin-bottom: 0; }
+.md p { margin: 0 0 .7em; } .md ul, .md ol { margin: 0 0 .7em; padding-left: 1.3em; }
+.md h1, .md h2, .md h3 { font-size: 1.08em; margin: 1em 0 .4em; }
+.md pre { background: var(--surface-2); border: 1px solid var(--line); padding: 10px 12px; border-radius: 10px; overflow-x: auto; font-size: 13.5px; }
+.md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+.md pre code { background: none; padding: 0; }
+.md a { color: var(--accent); }
+.md table { display: block; overflow-x: auto; border-collapse: collapse; font-size: 14px; }
+.md th, .md td { border: 1px solid var(--line); padding: 4px 8px; }
+.md blockquote { margin: 0 0 .7em; padding-left: 12px; border-left: 3px solid var(--line); color: var(--muted); }
+.cursor::after { content: ""; display: inline-block; width: 8px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--accent); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.tool { align-self: flex-start; max-width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.tool > button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; text-align: left; min-height: 40px; }
+.tool .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.tool.running .dot { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+.tool.ok .dot { background: var(--accent); } .tool.err .dot { background: var(--danger); }
+@keyframes pulse { 50% { opacity: .3; } }
+.tool .label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool .label b { font-weight: 600; }
+.tool .detail { display: none; padding: 0 12px 10px; }
+.tool.open .detail { display: block; }
+.tool pre { margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); padding: 8px 10px; border-radius: 8px; max-height: 260px; overflow: auto; }
+.tool .cap { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.err-box { background: var(--danger-soft); color: var(--danger); border-radius: 12px; padding: 10px 14px; font-size: 14px; overflow-wrap: anywhere; }
+.err-box button { text-decoration: underline; color: inherit; font-weight: 600; }
+
+.empty { text-align: center; padding: 28px 8px; }
+.empty img { width: 72px; height: 72px; border-radius: 18px; }
+.empty h2 { margin: 12px 0 4px; font-size: 22px; }
+.empty p { color: var(--muted); margin: 0 auto 18px; max-width: 34ch; }
+.chips { display: flex; flex-direction: column; gap: 8px; max-width: 420px; margin: 0 auto; }
+.chip { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; text-align: left; font-size: 15px; }
+.chip:active { background: var(--surface-2); }
+.cta { display: inline-block; background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 12px 18px; font-weight: 650; }
+
+.plan { background: var(--surface); border-top: 1px solid var(--line); }
+.plan[hidden] { display: none; }
+.plan > button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 16px; min-height: 44px; text-align: left; font-size: 14px; }
+.plan .bar { flex: none; width: 46px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.plan .bar i { display: block; height: 100%; background: var(--accent); }
+.plan .now { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plan ol { display: none; margin: 0; padding: 0 16px 10px 40px; font-size: 14px; max-height: 38dvh; overflow: auto; }
+.plan.open ol { display: block; }
+.plan li { padding: 3px 0; }
+.plan li.completed { color: var(--muted); text-decoration: line-through; }
+.plan li.in_progress { font-weight: 600; color: var(--accent); }
+.chev { transition: transform .2s; width: 18px; height: 18px; }
+.plan.open .chev { transform: rotate(180deg); }
+
+footer.composer { background: var(--surface); border-top: 1px solid var(--line); padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px); }
+.compose-row { max-width: 760px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px; }
+#input { flex: 1; resize: none; border: 1px solid var(--line); background: var(--bg); border-radius: 22px; padding: 10px 16px; max-height: 40dvh; min-height: 44px; outline: none; line-height: 1.4; }
+#input:focus { border-color: var(--accent); }
+.send { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.send:disabled { opacity: .4; }
+.send.stop { background: var(--danger); color: #fff; }
+
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.45); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; }
+.scrim.show { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: var(--shadow); max-height: 92dvh; display: flex; flex-direction: column; transform: translateY(105%); transition: transform .25s ease; padding-bottom: env(safe-area-inset-bottom); }
+.sheet.show { transform: none; }
+.sheet .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 0; }
+.sheet .head { display: flex; align-items: center; padding: 4px 8px 4px 16px; gap: 4px; }
+.sheet .head h2 { flex: 1; font-size: 18px; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet .body { overflow-y: auto; padding: 4px 16px 18px; }
+@media (min-width: 700px) { .sheet { left: 50%; right: auto; width: 640px; margin-left: -320px; } }
+
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; width: min(84vw, 340px); z-index: 11; background: var(--surface); box-shadow: var(--shadow); transform: translateX(-105%); transition: transform .25s ease; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+.drawer.show { transform: none; }
+.drawer .head { display: flex; align-items: center; padding: 8px 8px 8px 16px; }
+.drawer .head h2 { flex: 1; margin: 0; font-size: 18px; }
+.new-chat { margin: 0 12px 8px; padding: 12px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+.chat-list { flex: 1; overflow-y: auto; padding: 0 8px calc(env(safe-area-inset-bottom) + 12px); }
+.chat-row { display: flex; align-items: center; border-radius: 10px; }
+.chat-row.current { background: var(--surface-2); }
+.chat-row .open-chat { flex: 1; min-width: 0; text-align: left; padding: 10px; }
+.chat-row .t { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-row .d { display: block; font-size: 12px; color: var(--muted); }
+.chat-row .icon-btn { color: var(--muted); }
+
+.field { margin: 14px 0; }
+.field > label, .field > .lab { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
+.field input[type=text], .field input[type=password], .field select { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); outline: none; }
+.field input:focus, .field select:focus { border-color: var(--accent); }
+.seg { display: flex; background: var(--surface-2); border-radius: 12px; padding: 3px; }
+.seg button { flex: 1; padding: 9px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.key-row { display: flex; gap: 6px; }
+.key-row input { flex: 1; }
+.key-row .icon-btn { border: 1px solid var(--line); }
+.hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.hint a { color: var(--accent); }
+.primary { width: 100%; padding: 13px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 650; margin-top: 6px; }
+.card { background: var(--surface-2); border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 18px; }
+.card h3 { margin: 0 0 6px; font-size: 15px; }
+.card ol { margin: 0; padding-left: 1.2em; }
+
+.file-row { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
+.file-row .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+.file-row .s { font-size: 12px; color: var(--muted); }
+.muted { color: var(--muted); }
+.viewer pre.raw { white-space: pre-wrap; word-break: break-word; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); padding: 12px; border-radius: 10px; margin: 0; }
+.actions { display: flex; gap: 8px; margin-bottom: 12px; }
+.actions button { flex: 1; padding: 10px; border-radius: 10px; background: var(--surface-2); font-weight: 600; font-size: 14px; }
+.actions button.danger { color: var(--danger); }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 90px); transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 9px 16px; border-radius: 20px; font-size: 14px; opacity: 0; transition: .2s; z-index: 20; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button class="icon-btn" id="btnChats" aria-label="Chats"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <h1 id="title">Deep Agents</h1>
+    <button class="icon-btn" id="btnFiles" aria-label="Files"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span class="badge" id="fileBadge" hidden></span></button>
+    <button class="icon-btn" id="btnSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+
+  <main id="scroll"><div class="feed" id="feed"></div></main>
+
+  <section class="plan" id="plan" hidden>
+    <button id="planToggle" aria-expanded="false">
+      <span class="bar"><i id="planBar"></i></span>
+      <span class="now" id="planNow"></span>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>
+    </button>
+    <ol id="planList"></ol>
+  </section>
+
+  <footer class="composer">
+    <div class="compose-row">
+      <textarea id="input" rows="1" placeholder="Ask your deep agent…" enterkeyhint="send"></textarea>
+      <button class="send" id="send" aria-label="Send" disabled><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    </div>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="drawer" id="drawer" aria-label="Chats">
+  <div class="head"><h2>Chats</h2><button class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button class="new-chat" id="newChat">+ New chat</button>
+  <div class="chat-list" id="chatList"></div>
+</aside>
+
+<section class="sheet" id="settingsSheet" aria-label="Settings">
+  <div class="grab"></div>
+  <div class="head"><h2>Settings</h2><button class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="body">
+    <div class="field"><span class="lab">Model provider</span>
+      <div class="seg" id="providerSeg"><button data-p="anthropic">Anthropic</button><button data-p="openai">OpenAI</button></div>
+    </div>
+    <div class="field"><label for="modelSel">Model</label>
+      <select id="modelSel"></select>
+      <input type="text" id="modelCustom" placeholder="Exact model name" autocapitalize="off" autocorrect="off" spellcheck="false" style="margin-top:8px" hidden>
+    </div>
+    <div class="field"><label for="apiKey" id="keyLabel">API key</label>
+      <div class="key-row"><input type="password" id="apiKey" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste your key"><button class="icon-btn" id="toggleKey" aria-label="Show key"><svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="hint" id="keyHint"></div>
+    </div>
+    <div class="field"><label for="tavilyKey">Web search key (optional)</label>
+      <input type="password" id="tavilyKey" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Tavily key: turns on web search">
+      <div class="hint">Free key at <a href="https://app.tavily.com" target="_blank" rel="noopener">app.tavily.com</a>. Without it the agent can still read any web page you link.</div>
+    </div>
+    <div class="field"><span class="lab">Appearance</span>
+      <div class="seg" id="themeSeg"><button data-t="auto">Auto</button><button data-t="light">Light</button><button data-t="dark">Dark</button></div>
+    </div>
+    <button class="primary" id="saveSettings">Save</button>
+    <div class="hint" style="text-align:center">Keys stay on this phone. They're sent only to this app's own server with each request and are never stored there.</div>
+
+    <div class="card" id="installCard">
+      <h3>Install on your home screen</h3>
+      <button class="primary" id="installBtn" hidden>Install app</button>
+      <ol id="installSteps">
+        <li><b>iPhone (Safari):</b> tap Share, then <b>Add to Home Screen</b>.</li>
+        <li><b>Android (Chrome):</b> tap ⋮, then <b>Install app</b> or <b>Add to Home screen</b>.</li>
+      </ol>
+    </div>
+    <div class="hint" style="text-align:center;margin-top:14px">Powered by LangChain <code>deepagents</code> · <span id="ver"></span></div>
+  </div>
+</section>
+
+<section class="sheet" id="filesSheet" aria-label="Files">
+  <div class="grab"></div>
+  <div class="head"><h2 id="filesTitle">Files</h2><button class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="body" id="filesBody"></div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const STORE = "dam.v1";
+  const MODELS = {
+    anthropic: [
+      ["claude-sonnet-5-5", "Claude Sonnet 5.5 (recommended)"],
+      ["claude-opus-5-5", "Claude Opus 5.5 (most capable)"],
+      ["claude-haiku-5-5", "Claude Haiku 5.5 (fastest, cheapest)"],
+    ],
+    openai: [
+      ["gpt-5", "GPT-5"],
+      ["gpt-5-mini", "GPT-5 mini"],
+    ],
+  };
+  const KEY_HINT = {
+    anthropic: 'Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.',
+    openai: 'Get a key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.',
+  };
+  const SUGGESTIONS = [
+    "Research the pros and cons of heat pumps vs. furnaces and write a one-page report file",
+    "Plan a 3-day weekend in Chicago on a budget and save the itinerary as a file",
+    "Draft a polite email asking my landlord to fix the heating, then a shorter text version",
+  ];
+
+  // ---------------------------------------------------------------- storage
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const newChat = () => ({ id: uid(), title: "New chat", updated: Date.now(), items: [], files: {}, todos: [] });
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE));
+      if (s && Array.isArray(s.chats) && s.chats.length) return s;
+    } catch (e) {}
+    const c = newChat();
+    return { settings: { provider: "anthropic", model: "claude-sonnet-5-5", apiKey: "", tavilyKey: "", theme: "auto" }, chats: [c], currentId: c.id };
+  }
+  let S = load();
+  let saveTimer = null;
+  function save(now) {
+    clearTimeout(saveTimer);
+    const write = () => { try { localStorage.setItem(STORE, JSON.stringify(S, (k, v) => (k === "_el" ? undefined : v))); } catch (e) { toast("Storage full: delete old chats"); } };
+    now ? write() : (saveTimer = setTimeout(write, 300));
+  }
+  const chat = () => S.chats.find((c) => c.id === S.currentId) || S.chats[0];
+
+  // ---------------------------------------------------------------- theme
+  function applyTheme() {
+    const t = S.settings.theme || "auto";
+    if (t === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", t);
+    const bg = getComputedStyle(document.body).getPropertyValue("--surface").trim();
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", bg || "#111318");
+  }
+
+  // ---------------------------------------------------------------- render helpers
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  marked.setOptions({ gfm: true, breaks: true });
+  const md = (text) => DOMPurify.sanitize(marked.parse(text || ""), { ADD_ATTR: ["target"] });
+  function linkify(el) { el.querySelectorAll("a[href]").forEach((a) => { a.target = "_blank"; a.rel = "noopener"; }); }
+
+  function toolLabel(name, args) {
+    args = args || {};
+    const p = args.file_path || args.path || "";
+    switch (name) {
+      case "write_todos": {
+        const t = args.todos || [], done = t.filter((x) => x.status === "completed").length;
+        return done ? `<b>Updated plan</b> ${done}/${t.length} done` : `<b>Planned</b> ${t.length} steps`;
+      }
+      case "write_file": return `<b>Wrote</b> ${esc(p)}`;
+      case "edit_file": return `<b>Edited</b> ${esc(p)}`;
+      case "read_file": return `<b>Read</b> ${esc(p)}`;
+      case "ls": return `<b>Listed</b> ${esc(p || "/")}`;
+      case "glob": return `<b>Found files</b> ${esc(args.pattern || "")}`;
+      case "grep": return `<b>Searched files</b> ${esc(args.pattern || "")}`;
+      case "delete": return `<b>Deleted</b> ${esc(p)}`;
+      case "task": return `<b>Sub-agent:</b> ${esc(args.description || args.subagent_type || "")}`;
+      case "fetch_url": return `<b>Read page</b> ${esc((args.url || "").replace(/^https?:\/\//, ""))}`;
+      case "web_search": return `<b>Searched</b> ${esc(args.query || "")}`;
+      default: return `<b>${esc(name)}</b>`;
+    }
+  }
+
+  function renderItem(it) {
+    if (it.kind === "user") {
+      const d = document.createElement("div");
+      d.className = "msg user"; d.textContent = it.text; return d;
+    }
+    if (it.kind === "ai") {
+      const d = document.createElement("div");
+      d.className = "msg ai md"; d.innerHTML = md(it.text); linkify(d); return d;
+    }
+    if (it.kind === "tool") {
+      const d = document.createElement("div");
+      d.className = "tool " + (it.done ? (it.error ? "err" : "ok") : (busy ? "running" : "err"));
+      const args = JSON.stringify(it.args || {}, null, 2);
+      d.innerHTML = `<button aria-expanded="false"><span class="dot"></span><span class="label">${toolLabel(it.name, it.args)}</span></button>
+        <div class="detail"><div class="cap">Input</div><pre>${esc(args.length > 3000 ? args.slice(0, 3000) + "\n…" : args)}</pre>
+        ${it.done ? `<div class="cap">Result</div><pre>${esc(it.content || "")}</pre>` : ""}</div>`;
+      d.firstElementChild.onclick = () => { d.classList.toggle("open"); d.firstElementChild.setAttribute("aria-expanded", d.classList.contains("open")); };
+      return d;
+    }
+    if (it.kind === "error") {
+      const d = document.createElement("div");
+      d.className = "err-box";
+      d.innerHTML = esc(it.text) + (/key|auth|401|403|Settings/i.test(it.text) ? ' <button data-open-settings>Open Settings</button>' : "");
+      const b = d.querySelector("[data-open-settings]"); if (b) b.onclick = () => openSheet("settingsSheet");
+      return d;
+    }
+    return document.createElement("div");
+  }
+
+  function renderEmpty() {
+    const hasKey = !!S.settings.apiKey;
+    const d = document.createElement("div");
+    d.className = "empty";
+    d.innerHTML = `<img src="/icons/icon-192.png" alt=""><h2>Deep Agents</h2>
+      <p>An agent that plans its work, writes files, reads the web and hands sub-tasks to helper agents.</p>
+      ${hasKey ? `<div class="chips">${SUGGESTIONS.map((s) => `<button class="chip">${esc(s)}</button>`).join("")}</div>`
+               : `<button class="cta" id="setupBtn">Add your API key to start</button>`}`;
+    d.querySelectorAll(".chip").forEach((b) => (b.onclick = () => { $("input").value = b.textContent; autosize(); updateSend(); $("input").focus(); }));
+    const sb = d.querySelector("#setupBtn"); if (sb) sb.onclick = () => openSheet("settingsSheet");
+    return d;
+  }
+
+  function renderFeed() {
+    const c = chat(), feed = $("feed");
+    feed.innerHTML = "";
+    if (!c.items.length) feed.appendChild(renderEmpty());
+    c.items.forEach((it) => { const el = renderItem(it); it._el = el; feed.appendChild(el); });
+    $("title").textContent = c.items.length ? c.title : "Deep Agents";
+    renderPlan(); renderBadge();
+    scrollDown(true);
+  }
+
+  function scrollDown(force) {
+    const sc = $("scroll");
+    const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 160;
+    if (force || near) requestAnimationFrame(() => (sc.scrollTop = sc.scrollHeight));
+  }
+
+  function renderPlan() {
+    const todos = chat().todos || [];
+    const plan = $("plan");
+    if (!todos.length) { plan.hidden = true; return; }
+    plan.hidden = false;
+    const done = todos.filter((t) => t.status === "completed").length;
+    const cur = todos.find((t) => t.status === "in_progress") || todos.find((t) => t.status === "pending");
+    $("planBar").style.width = Math.round((done / todos.length) * 100) + "%";
+    $("planNow").innerHTML = `<b>Plan ${done}/${todos.length}</b> · ${esc(cur ? cur.content : "All steps done")}`;
+    $("planList").innerHTML = todos.map((t) => `<li class="${esc(t.status)}">${esc(t.content)}</li>`).join("");
+  }
+
+  function renderBadge() {
+    const n = Object.keys(chat().files || {}).length;
+    $("fileBadge").hidden = !n; $("fileBadge").textContent = n;
+  }
+
+  // ---------------------------------------------------------------- composer
+  const input = $("input"), sendBtn = $("send");
+  let busy = false, controller = null;
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, window.innerHeight * 0.4) + "px"; }
+  function updateSend() {
+    sendBtn.classList.toggle("stop", busy);
+    sendBtn.disabled = !busy && !input.value.trim();
+    sendBtn.setAttribute("aria-label", busy ? "Stop" : "Send");
+    sendBtn.innerHTML = busy
+      ? '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  }
+  input.addEventListener("input", () => { autosize(); updateSend(); });
+  input.addEventListener("keydown", (e) => {
+    // On phones Enter adds a new line; on keyboards Enter sends and Shift+Enter adds a line.
+    if (e.key === "Enter" && !e.shiftKey && !("ontouchstart" in window) && !e.isComposing) { e.preventDefault(); send(); }
+  });
+  sendBtn.onclick = () => (busy ? stop() : send());
+
+  function stop() { if (controller) controller.abort(); }
+
+  function history(c) {
+    const out = [];
+    for (const it of c.items) {
+      if (it.kind !== "user" && it.kind !== "ai") continue;
+      const role = it.kind === "user" ? "user" : "assistant";
+      const last = out[out.length - 1];
+      if (last && last.role === role) last.content += "\n\n" + it.text;
+      else out.push({ role, content: it.text });
+    }
+    return out;
+  }
+
+  function push(c, it) {
+    if (c.id === S.currentId) {
+      const feed = $("feed");
+      if (c.items.length === 0) feed.innerHTML = "";
+      it._el = renderItem(it); feed.appendChild(it._el); scrollDown();
+    }
+    c.items.push(it);
+    return it;
+  }
+  function rerender(c, it) {
+    if (c.id !== S.currentId || !it._el) return;
+    const el = renderItem(it); it._el.replaceWith(el); it._el = el;
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || busy) return;
+    const st = S.settings;
+    if (!st.apiKey) { openSheet("settingsSheet"); toast("Add your API key first"); return; }
+    const c = chat();
+    if (!c.items.length) c.title = text.length > 48 ? text.slice(0, 46) + "…" : text;
+    c.updated = Date.now();
+    input.value = ""; autosize();
+    push(c, { kind: "user", text });
+    $("title").textContent = c.title;
+    busy = true; updateSend(); save();
+
+    controller = new AbortController();
+    let live = null, liveRaw = "";
+    const tools = {};
+    const flushLive = () => {
+      if (!live) return;
+      if (c.id === S.currentId && live._el) { live._el.innerHTML = md(liveRaw); linkify(live._el); live._el.classList.add("cursor"); }
+    };
+    let raf = null;
+    const scheduleLive = () => { if (!raf) raf = requestAnimationFrame(() => { raf = null; flushLive(); scrollDown(); }); };
+
+    const handle = (ev) => {
+      switch (ev.type) {
+        case "token":
+          if (!live) { live = push(c, { kind: "ai", text: "" }); liveRaw = ""; }
+          liveRaw += ev.text; live.text = liveRaw; scheduleLive();
+          break;
+        case "ai":
+          if (live) { live.text = ev.text; if (live._el) live._el.classList.remove("cursor"); rerender(c, live); live = null; }
+          else push(c, { kind: "ai", text: ev.text });
+          break;
+        case "tool_start":
+          if (live) { if (live._el) live._el.classList.remove("cursor"); rerender(c, live); live = null; }
+          tools[ev.id] = push(c, { kind: "tool", id: ev.id, name: ev.name, args: ev.args, done: false });
+          break;
+        case "tool_end": {
+          const t = tools[ev.id] || push(c, { kind: "tool", id: ev.id, name: ev.name, args: {} });
+          t.done = true; t.error = !!ev.error || /^Error/.test(ev.content || ""); t.content = ev.content;
+          rerender(c, t);
+          break;
+        }
+        case "todos": c.todos = ev.todos || []; if (c.id === S.currentId) renderPlan(); break;
+        case "files":
+          c.files = c.files || {};
+          for (const [p, v] of Object.entries(ev.files || {})) { if (v == null) delete c.files[p]; else c.files[p] = v; }
+          if (c.id === S.currentId) renderBadge();
+          break;
+        case "error": push(c, { kind: "error", text: ev.message }); break;
+      }
+      c.updated = Date.now(); save();
+    };
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: st.provider, model: st.model, apiKey: st.apiKey, tavilyKey: st.tavilyKey || "", messages: history(c), files: c.files || {}, todos: c.todos || [] }),
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        let msg = `Server error ${res.status}`;
+        try { const j = await res.json(); msg = j.error || j.detail || msg; } catch (e) {}
+        throw new Error(msg);
+      }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+          if (line) { try { handle(JSON.parse(line)); } catch (e) { console.warn("bad line", line); } }
+        }
+      }
+      if (buf.trim()) { try { handle(JSON.parse(buf)); } catch (e) {} }
+    } catch (e) {
+      if (e.name === "AbortError") push(c, { kind: "error", text: "Stopped." });
+      else push(c, { kind: "error", text: navigator.onLine ? (e.message || String(e)) : "You're offline. Reconnect and try again." });
+    } finally {
+      if (live) { if (live._el) live._el.classList.remove("cursor"); rerender(c, live); }
+      busy = false; controller = null; updateSend();
+      Object.values(tools).forEach((t) => { if (!t.done) rerender(c, t); });
+      save(true); renderChats();
+    }
+  }
+
+  // ---------------------------------------------------------------- sheets & drawer
+  const scrim = $("scrim");
+  let openEl = null;
+  function openSheet(id) {
+    closeAll();
+    if (id === "settingsSheet") fillSettings();
+    if (id === "filesSheet") renderFiles();
+    if (id === "drawer") renderChats();
+    openEl = $(id); openEl.classList.add("show"); scrim.classList.add("show");
+  }
+  function closeAll() { if (openEl) openEl.classList.remove("show"); openEl = null; scrim.classList.remove("show"); }
+  scrim.onclick = closeAll;
+  document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = closeAll));
+  $("btnSettings").onclick = () => openSheet("settingsSheet");
+  $("btnFiles").onclick = () => openSheet("filesSheet");
+  $("btnChats").onclick = () => openSheet("drawer");
+  $("planToggle").onclick = () => { const p = $("plan"); p.classList.toggle("open"); $("planToggle").setAttribute("aria-expanded", p.classList.contains("open")); };
+
+  // Swipe down on a sheet's grab area to close.
+  document.querySelectorAll(".sheet .grab, .sheet .head").forEach((h) => {
+    let y0 = null;
+    h.addEventListener("touchstart", (e) => (y0 = e.touches[0].clientY), { passive: true });
+    h.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 60) closeAll(); y0 = null; });
+  });
+
+  // ---------------------------------------------------------------- chats
+  function renderChats() {
+    const list = $("chatList");
+    const chats = [...S.chats].sort((a, b) => b.updated - a.updated);
+    list.innerHTML = "";
+    for (const c of chats) {
+      const row = document.createElement("div");
+      row.className = "chat-row" + (c.id === S.currentId ? " current" : "");
+      const when = new Date(c.updated).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      row.innerHTML = `<button class="open-chat"><span class="t">${esc(c.title)}</span><span class="d">${when} · ${Object.keys(c.files || {}).length} files</span></button>
+        <button class="icon-btn" aria-label="Delete chat"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>`;
+      row.firstElementChild.onclick = () => { if (busy) return toast("Wait for the agent to finish"); S.currentId = c.id; save(); closeAll(); renderFeed(); };
+      row.lastElementChild.onclick = () => {
+        if (busy && c.id === S.currentId) return toast("Wait for the agent to finish");
+        if (!confirm(`Delete "${c.title}" and its files?`)) return;
+        S.chats = S.chats.filter((x) => x.id !== c.id);
+        if (!S.chats.length) S.chats.push(newChat());
+        if (!S.chats.find((x) => x.id === S.currentId)) S.currentId = S.chats[0].id;
+        save(true); renderChats(); renderFeed();
+      };
+      list.appendChild(row);
+    }
+  }
+  $("newChat").onclick = () => {
+    if (busy) return toast("Wait for the agent to finish");
+    const cur = chat();
+    if (cur.items.length) { const c = newChat(); S.chats.push(c); S.currentId = c.id; }
+    save(true); closeAll(); renderFeed(); input.focus();
+  };
+
+  // ---------------------------------------------------------------- files
+  const fileText = (f) => (Array.isArray(f.content) ? f.content.join("\n") : String(f.content ?? ""));
+  function renderFiles() {
+    const files = chat().files || {};
+    const paths = Object.keys(files).sort();
+    $("filesTitle").textContent = "Files";
+    const body = $("filesBody");
+    if (!paths.length) { body.innerHTML = '<p class="muted">No files yet. Files the agent writes for this chat show up here.</p>'; return; }
+    body.innerHTML = "";
+    for (const p of paths) {
+      const b = document.createElement("button");
+      b.className = "file-row";
+      const size = fileText(files[p]).length;
+      b.innerHTML = `<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span class="n">${esc(p)}</span><span class="s">${size < 1024 ? size + " B" : (size / 1024).toFixed(1) + " KB"}</span>`;
+      b.onclick = () => viewFile(p);
+      body.appendChild(b);
+    }
+  }
+  function viewFile(p) {
+    const f = (chat().files || {})[p];
+    if (!f) return renderFiles();
+    const text = fileText(f);
+    $("filesTitle").textContent = p.split("/").pop();
+    const body = $("filesBody");
+    const isMd = /\.(md|markdown)$/i.test(p);
+    body.innerHTML = `<div class="actions"><button id="fBack">‹ Files</button><button id="fCopy">Copy</button><button id="fSave">Save</button><button id="fDel" class="danger">Delete</button></div>
+      <div class="viewer">${isMd ? `<div class="md" id="fView"></div>` : `<pre class="raw" id="fView"></pre>`}</div>`;
+    if (isMd) { $("fView").innerHTML = md(text); linkify($("fView")); } else $("fView").textContent = text;
+    $("fBack").onclick = renderFiles;
+    $("fCopy").onclick = async () => { try { await navigator.clipboard.writeText(text); toast("Copied"); } catch (e) { toast("Copy failed"); } };
+    $("fSave").onclick = async () => {
+      const name = p.split("/").pop() || "file.txt";
+      const blob = new Blob([text], { type: "text/plain" });
+      try {
+        const file = new File([blob], name, { type: "text/plain" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
+      } catch (e) { if (e.name === "AbortError") return; }
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    };
+    $("fDel").onclick = () => {
+      if (!confirm(`Delete ${p}?`)) return;
+      delete chat().files[p]; save(true); renderBadge(); renderFiles();
+    };
+  }
+
+  // ---------------------------------------------------------------- settings
+  let draftProvider = S.settings.provider, draftTheme = S.settings.theme || "auto";
+  function fillModels(provider, current) {
+    const sel = $("modelSel");
+    const opts = MODELS[provider];
+    const known = opts.some(([v]) => v === current);
+    sel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("") + `<option value="__custom">Other model…</option>`;
+    sel.value = known ? current : current ? "__custom" : opts[0][0];
+    $("modelCustom").hidden = sel.value !== "__custom";
+    $("modelCustom").value = known ? "" : current || "";
+  }
+  function setSeg(seg, attr, val) { seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset[attr] === val)); }
+  function fillSettings() {
+    const st = S.settings;
+    draftProvider = st.provider; draftTheme = st.theme || "auto";
+    setSeg($("providerSeg"), "p", draftProvider); setSeg($("themeSeg"), "t", draftTheme);
+    fillModels(draftProvider, st.model);
+    $("apiKey").value = st.apiKey || ""; $("apiKey").type = "password";
+    $("tavilyKey").value = st.tavilyKey || "";
+    $("keyLabel").textContent = (draftProvider === "anthropic" ? "Anthropic" : "OpenAI") + " API key";
+    $("keyHint").innerHTML = KEY_HINT[draftProvider];
+  }
+  $("providerSeg").onclick = (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.p === draftProvider) return;
+    draftProvider = b.dataset.p; setSeg($("providerSeg"), "p", draftProvider);
+    fillModels(draftProvider, MODELS[draftProvider][0][0]);
+    $("apiKey").value = (S.settings.keys || {})[draftProvider] || (S.settings.provider === draftProvider ? S.settings.apiKey : "");
+    $("keyLabel").textContent = (draftProvider === "anthropic" ? "Anthropic" : "OpenAI") + " API key";
+    $("keyHint").innerHTML = KEY_HINT[draftProvider];
+  };
+  $("themeSeg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; draftTheme = b.dataset.t; setSeg($("themeSeg"), "t", draftTheme); };
+  $("modelSel").onchange = () => { $("modelCustom").hidden = $("modelSel").value !== "__custom"; if (!$("modelCustom").hidden) $("modelCustom").focus(); };
+  $("toggleKey").onclick = () => { const k = $("apiKey"); k.type = k.type === "password" ? "text" : "password"; };
+  $("saveSettings").onclick = () => {
+    const model = $("modelSel").value === "__custom" ? $("modelCustom").value.trim() : $("modelSel").value;
+    if (!model) { toast("Enter a model name"); return; }
+    const key = $("apiKey").value.trim();
+    S.settings.keys = S.settings.keys || {};
+    S.settings.keys[draftProvider] = key;
+    Object.assign(S.settings, { provider: draftProvider, model, apiKey: key, tavilyKey: $("tavilyKey").value.trim(), theme: draftTheme });
+    save(true); applyTheme(); closeAll(); toast("Saved");
+    if (!chat().items.length) renderFeed();
+  };
+
+  // ---------------------------------------------------------------- install
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; $("installBtn").hidden = false; });
+  $("installBtn").onclick = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $("installBtn").hidden = true; };
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone) $("installCard").hidden = true;
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  fetch("/api/chat").then((r) => r.json()).then((j) => ($("ver").textContent = "v" + j.version)).catch(() => ($("ver").textContent = "offline"));
+
+  // ---------------------------------------------------------------- misc
+  let toastTimer;
+  function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800); }
+
+  applyTheme();
+  renderFeed();
+  updateSend();
+})();
+</script>
+</body>
+</html>

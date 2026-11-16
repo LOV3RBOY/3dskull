@@ -1,0 +1,5 @@
+deepagents==0.7.38
+fastapi==0.163.1
+httpx==0.28.1
+langchain-anthropic==1.7.10
+langchain-openai==1.8.0
